@@ -1123,7 +1123,7 @@ fn the_chat_shows_one_state_where_the_four_models_were() {
     let window = draw(|app| app.service_error = LOAD_FAILED.into());
     only(&window, "準備完了");
     let (rect, color) = find_text(&window.output, LOAD_FAILED);
-    assert_eq!(color, theme::ERROR);
+    assert_eq!(color, theme::error_color());
     assert!(
         rect.bottom() < 620.0 - theme::CONTROL_H,
         "the error is in the status row, not beside the button"
@@ -1812,4 +1812,29 @@ fn the_settings_list_the_shortcuts_of_what_is_in_front() {
             .any(|(text, _, _)| text.contains("範囲翻訳")),
         "a key of the other features is listed"
     );
+}
+
+#[test]
+fn switching_theme_recolors_every_page_and_restores_light_mode() {
+    let mut app = chat();
+    let mut window = Window::new(1000.0, 760.0);
+    for dark in [false, true, false] {
+        app.settings.dark_chat = dark;
+        for tab in [Tab::Live, Tab::Text, Tab::Files, Tab::Settings, Tab::Setup] {
+            app.tab = tab;
+            window.settle(&mut app);
+            let visuals = window.context.style().visuals.clone();
+            assert_eq!(visuals.dark_mode, dark);
+            let canvas_luminance = theme::relative_luminance(visuals.panel_fill);
+            let text_luminance = theme::relative_luminance(visuals.text_color());
+            if dark {
+                assert!(canvas_luminance < 0.02 && text_luminance > 0.8);
+            } else {
+                assert!(canvas_luminance > 0.9 && text_luminance < 0.03);
+                assert!(window.context.style().spacing.scroll.foreground_color);
+            }
+            assert!(!filled(&window.output, visuals.panel_fill).is_empty());
+            assert!(theme::contrast_ratio(visuals.text_color(), visuals.extreme_bg_color) >= 4.5);
+        }
+    }
 }

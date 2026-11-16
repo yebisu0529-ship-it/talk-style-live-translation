@@ -1764,7 +1764,7 @@ pub(super) mod testing {
         let background = background(output, panel);
         assert!(
             luminance(background) < 0.01
-                && theme::contrast_ratio(background, theme::CANVAS) >= 1.05,
+                && theme::contrast_ratio(background, theme::canvas()) >= 1.05,
             "the background {background:?} is not a near-black told apart from the canvas"
         );
         let bubble = fill_behind(output, words);

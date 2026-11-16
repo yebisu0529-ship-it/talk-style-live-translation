@@ -568,7 +568,7 @@ impl App {
                 self.recalculate_recommendation();
             }
             for warning in &warnings {
-                ui.colored_label(theme::WARNING, warning);
+                ui.colored_label(theme::warning(), warning);
             }
         });
     }
@@ -586,14 +586,14 @@ impl App {
         ui.horizontal_wrapped(|ui| {
             for (index, (label, current, done)) in steps.into_iter().enumerate() {
                 if index > 0 {
-                    ui.label(RichText::new("→").color(theme::TEXT_MUTED));
+                    ui.label(RichText::new("→").color(theme::text_muted()));
                 }
                 let color = if current {
-                    ACCENT
+                    accent()
                 } else if done {
-                    theme::TEXT_SECONDARY
+                    theme::text_secondary()
                 } else {
-                    theme::TEXT_MUTED
+                    theme::text_muted()
                 };
                 ui.label(RichText::new(label).color(color).strong());
             }
@@ -619,7 +619,7 @@ impl App {
                     "ここまでの準備は保持しています。"
                 };
                 ui.colored_label(
-                    theme::ERROR,
+                    theme::error_color(),
                     format!(
                         "{number}/{total} {}を準備できませんでした。{kept}",
                         step.name()
@@ -644,7 +644,7 @@ impl App {
                 }
                 if !fits {
                     ui.colored_label(
-                        theme::WARNING,
+                        theme::warning(),
                         "容量の条件を確認できません。空き容量を増やすか、別のモデルを選んでください。",
                     );
                 }
@@ -688,11 +688,12 @@ impl App {
     /// One line per failure, so the fixed bar never pushes its button away.
     fn setup_error_summary(&self, ui: &mut egui::Ui) {
         if !self.setup.error.is_empty() {
-            ui.colored_label(theme::ERROR, "PCの情報を確認できませんでした。");
+            ui.colored_label(theme::error_color(), "PCの情報を確認できませんでした。");
         }
         if !self.service_error.is_empty() {
             ui.add(
-                egui::Label::new(RichText::new(&self.service_error).color(theme::ERROR)).truncate(),
+                egui::Label::new(RichText::new(&self.service_error).color(theme::error_color()))
+                    .truncate(),
             )
             .on_hover_text(&self.service_error);
         }

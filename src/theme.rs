@@ -1,45 +1,153 @@
 //! Shared visual language for the normal, mini and subtitle windows.
 //!
-//! Tokens follow the supplied design specification: a dark canvas, one raised
+//! Tokens follow the supplied design specification: a theme-aware canvas, one raised
 //! surface, a single accent, and text roles whose contrast is verified below.
 //! Values are logical points, so they scale with the display DPI setting.
 
 use eframe::egui::{self, Color32, RichText, Stroke};
+
+thread_local! {
+    static DARK: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+
+/// The immediate-mode paint helpers share a palette only for this render call.
+/// Restoring it on drop keeps nested viewports and parallel tests independent.
+pub struct PaletteScope(bool);
+impl Drop for PaletteScope {
+    fn drop(&mut self) {
+        DARK.with(|mode| mode.set(self.0));
+    }
+}
+pub fn enter(ctx: &egui::Context, dark: bool) -> PaletteScope {
+    let previous = DARK.with(|mode| mode.replace(dark));
+    apply(ctx);
+    PaletteScope(previous)
+}
 
 // ---------------------------------------------------------------------------
 // Colour: semantic roles, not component-local literals.
 // ---------------------------------------------------------------------------
 
 /// Base canvas behind every screen.
-pub const CANVAS: Color32 = Color32::from_rgb(17, 20, 25);
+pub fn canvas() -> Color32 {
+    if DARK.with(std::cell::Cell::get) {
+        Color32::from_rgb(17, 20, 25)
+    } else {
+        Color32::from_rgb(246, 248, 250)
+    }
+}
 /// Cards, panels, menu backgrounds.
-pub const SURFACE: Color32 = Color32::from_rgb(23, 28, 34);
+pub fn surface() -> Color32 {
+    if DARK.with(std::cell::Cell::get) {
+        Color32::from_rgb(23, 28, 34)
+    } else {
+        Color32::from_rgb(252, 253, 254)
+    }
+}
 /// Raised or selected surfaces (hover, active row).
-pub const SURFACE_RAISED: Color32 = Color32::from_rgb(30, 36, 44);
+pub fn surface_raised() -> Color32 {
+    if DARK.with(std::cell::Cell::get) {
+        Color32::from_rgb(30, 36, 44)
+    } else {
+        Color32::from_rgb(231, 237, 242)
+    }
+}
 /// Text entry background.
-pub const INPUT: Color32 = Color32::from_rgb(13, 16, 20);
+pub fn input() -> Color32 {
+    if DARK.with(std::cell::Cell::get) {
+        Color32::from_rgb(13, 16, 20)
+    } else {
+        Color32::from_rgb(255, 255, 255)
+    }
+}
 /// Default hairline.
-pub const BORDER: Color32 = Color32::from_rgb(41, 48, 58);
+pub fn border() -> Color32 {
+    if DARK.with(std::cell::Cell::get) {
+        Color32::from_rgb(41, 48, 58)
+    } else {
+        Color32::from_rgb(207, 216, 225)
+    }
+}
 /// Emphasis border and focus-adjacent chrome.
-pub const BORDER_STRONG: Color32 = Color32::from_rgb(102, 114, 127);
+pub fn border_strong() -> Color32 {
+    if DARK.with(std::cell::Cell::get) {
+        Color32::from_rgb(102, 114, 127)
+    } else {
+        Color32::from_rgb(113, 125, 139)
+    }
+}
 
 /// Primary reading text.
-pub const TEXT: Color32 = Color32::from_rgb(242, 245, 249);
+pub fn text_color() -> Color32 {
+    if DARK.with(std::cell::Cell::get) {
+        Color32::from_rgb(242, 245, 249)
+    } else {
+        Color32::from_rgb(24, 33, 45)
+    }
+}
 /// Supporting labels and metadata.
-pub const TEXT_SECONDARY: Color32 = Color32::from_rgb(182, 192, 204);
+pub fn text_secondary() -> Color32 {
+    if DARK.with(std::cell::Cell::get) {
+        Color32::from_rgb(182, 192, 204)
+    } else {
+        Color32::from_rgb(65, 80, 99)
+    }
+}
 /// De-emphasised hints that still have to stay readable.
-pub const TEXT_MUTED: Color32 = Color32::from_rgb(143, 154, 168);
+pub fn text_muted() -> Color32 {
+    if DARK.with(std::cell::Cell::get) {
+        Color32::from_rgb(143, 154, 168)
+    } else {
+        Color32::from_rgb(87, 101, 119)
+    }
+}
 
 /// Single accent for selection, links and progress.
-pub const ACCENT: Color32 = Color32::from_rgb(82, 211, 178);
+pub fn accent() -> Color32 {
+    if DARK.with(std::cell::Cell::get) {
+        Color32::from_rgb(82, 211, 178)
+    } else {
+        Color32::from_rgb(0, 109, 87)
+    }
+}
 /// Muted accent used for fills behind text.
-pub const ACCENT_SOFT: Color32 = Color32::from_rgb(28, 74, 65);
+pub fn accent_soft() -> Color32 {
+    if DARK.with(std::cell::Cell::get) {
+        Color32::from_rgb(28, 74, 65)
+    } else {
+        Color32::from_rgb(218, 240, 232)
+    }
+}
 /// Text drawn on top of the accent colour.
-pub const ON_ACCENT: Color32 = Color32::from_rgb(6, 20, 16);
+pub fn on_accent() -> Color32 {
+    if DARK.with(std::cell::Cell::get) {
+        Color32::from_rgb(6, 20, 16)
+    } else {
+        Color32::from_rgb(255, 255, 255)
+    }
+}
 
-pub const ERROR: Color32 = Color32::from_rgb(255, 146, 146);
-pub const WARNING: Color32 = Color32::from_rgb(244, 196, 124);
-pub const SUCCESS: Color32 = Color32::from_rgb(132, 222, 186);
+pub fn error_color() -> Color32 {
+    if DARK.with(std::cell::Cell::get) {
+        Color32::from_rgb(255, 146, 146)
+    } else {
+        Color32::from_rgb(176, 36, 48)
+    }
+}
+pub fn warning() -> Color32 {
+    if DARK.with(std::cell::Cell::get) {
+        Color32::from_rgb(244, 196, 124)
+    } else {
+        Color32::from_rgb(133, 83, 0)
+    }
+}
+pub fn success() -> Color32 {
+    if DARK.with(std::cell::Cell::get) {
+        Color32::from_rgb(132, 222, 186)
+    } else {
+        Color32::from_rgb(22, 110, 71)
+    }
+}
 
 // ---------------------------------------------------------------------------
 // Chat: a light messenger canvas inside the dark app, and a dark one.
@@ -181,24 +289,29 @@ pub fn reading_size(size: f32) -> f32 {
 }
 
 pub fn title(text: impl Into<String>) -> RichText {
-    RichText::new(text).size(SIZE_TITLE).strong().color(TEXT)
+    RichText::new(text)
+        .size(SIZE_TITLE)
+        .strong()
+        .color(text_color())
 }
 pub fn body(text: impl Into<String>) -> RichText {
-    RichText::new(text).size(SIZE_BODY).color(TEXT)
+    RichText::new(text).size(SIZE_BODY).color(text_color())
 }
 pub fn label(text: impl Into<String>) -> RichText {
-    RichText::new(text).size(SIZE_LABEL).color(TEXT_SECONDARY)
+    RichText::new(text).size(SIZE_LABEL).color(text_secondary())
 }
 pub fn caption(text: impl Into<String>) -> RichText {
-    RichText::new(text).size(SIZE_CAPTION).color(TEXT_MUTED)
+    RichText::new(text).size(SIZE_CAPTION).color(text_muted())
 }
 /// Placeholder text in an empty field. The app-wide text colour would otherwise
 /// paint it exactly like entered text.
 pub fn hint(text: impl Into<String>) -> RichText {
-    RichText::new(text).color(TEXT_MUTED)
+    RichText::new(text).color(text_muted())
 }
 pub fn reading(text: impl Into<String>, size: f32) -> RichText {
-    RichText::new(text).size(reading_size(size)).color(TEXT)
+    RichText::new(text)
+        .size(reading_size(size))
+        .color(text_color())
 }
 
 // ---------------------------------------------------------------------------
@@ -206,13 +319,13 @@ pub fn reading(text: impl Into<String>, size: f32) -> RichText {
 // ---------------------------------------------------------------------------
 
 pub fn hairline() -> Stroke {
-    Stroke::new(1.0_f32, BORDER)
+    Stroke::new(1.0_f32, border())
 }
 
 /// Standard grouped surface.
 pub fn card() -> egui::Frame {
     egui::Frame::new()
-        .fill(SURFACE)
+        .fill(surface())
         .stroke(hairline())
         .corner_radius(RADIUS_CARD)
         .inner_margin(egui::Margin::same(SPACE_4 as i8))
@@ -224,7 +337,11 @@ pub fn card() -> egui::Frame {
 
 pub fn apply(ctx: &egui::Context) {
     let mut style = (*ctx.style()).clone();
-    style.visuals = egui::Visuals::dark();
+    style.visuals = if DARK.with(std::cell::Cell::get) {
+        egui::Visuals::dark()
+    } else {
+        egui::Visuals::light()
+    };
     style.text_styles.insert(
         egui::TextStyle::Heading,
         egui::FontId::proportional(SIZE_TITLE),
@@ -250,46 +367,51 @@ pub fn apply(ctx: &egui::Context) {
     style.spacing.interact_size = egui::vec2(CONTROL_H, CONTROL_H);
     style.spacing.menu_margin = egui::Margin::same(SPACE_2 as i8);
     style.spacing.scroll = egui::style::ScrollStyle::solid();
+    style.spacing.scroll.foreground_color = !style.visuals.dark_mode;
     style.spacing.scroll.bar_width = 8.0;
     style.spacing.scroll.bar_inner_margin = 4.0;
 
-    style.visuals.override_text_color = Some(TEXT);
-    style.visuals.panel_fill = CANVAS;
-    style.visuals.window_fill = SURFACE;
-    style.visuals.extreme_bg_color = INPUT;
-    style.visuals.faint_bg_color = SURFACE;
-    style.visuals.selection.bg_fill = ACCENT_SOFT;
-    style.visuals.selection.stroke = Stroke::new(2.0_f32, ACCENT);
-    style.visuals.hyperlink_color = ACCENT;
-    style.visuals.window_stroke = Stroke::new(1.0_f32, BORDER_STRONG);
+    style.visuals.override_text_color = Some(text_color());
+    style.visuals.panel_fill = canvas();
+    style.visuals.window_fill = surface();
+    style.visuals.extreme_bg_color = input();
+    style.visuals.faint_bg_color = surface();
+    style.visuals.selection.bg_fill = accent_soft();
+    style.visuals.selection.stroke = Stroke::new(2.0_f32, accent());
+    style.visuals.hyperlink_color = accent();
+    style.visuals.window_stroke = Stroke::new(1.0_f32, border_strong());
     style.visuals.window_corner_radius = egui::CornerRadius::same(RADIUS_CARD);
 
     for (widget, fill, stroke) in [
-        (&mut style.visuals.widgets.inactive, SURFACE, BORDER),
+        (&mut style.visuals.widgets.inactive, surface(), border()),
         (
             &mut style.visuals.widgets.hovered,
-            SURFACE_RAISED,
-            BORDER_STRONG,
+            surface_raised(),
+            border_strong(),
         ),
-        (&mut style.visuals.widgets.active, SURFACE_RAISED, ACCENT),
+        (
+            &mut style.visuals.widgets.active,
+            surface_raised(),
+            accent(),
+        ),
         (
             &mut style.visuals.widgets.open,
-            SURFACE_RAISED,
-            BORDER_STRONG,
+            surface_raised(),
+            border_strong(),
         ),
     ] {
         widget.bg_fill = fill;
         widget.weak_bg_fill = fill;
         widget.bg_stroke = Stroke::new(1.0_f32, stroke);
-        widget.fg_stroke = Stroke::new(1.0_f32, TEXT);
+        widget.fg_stroke = Stroke::new(1.0_f32, text_color());
         widget.corner_radius = egui::CornerRadius::same(RADIUS_CONTROL);
     }
     // Keyboard focus reuses the active widget visuals, so the ring must read
     // as a focus indicator as well as a press state.
-    style.visuals.widgets.active.bg_stroke = Stroke::new(2.0_f32, ACCENT);
+    style.visuals.widgets.active.bg_stroke = Stroke::new(2.0_f32, accent());
     style.visuals.widgets.active.expansion = 0.0;
     style.visuals.widgets.noninteractive.bg_stroke = hairline();
-    style.visuals.widgets.noninteractive.fg_stroke = Stroke::new(1.0_f32, TEXT_SECONDARY);
+    style.visuals.widgets.noninteractive.fg_stroke = Stroke::new(1.0_f32, text_secondary());
     style.visuals.widgets.noninteractive.corner_radius = egui::CornerRadius::same(RADIUS_CONTROL);
     ctx.set_style(style);
 }
@@ -300,7 +422,7 @@ pub fn focus_ring(ui: &egui::Ui, response: &egui::Response) {
         ui.painter().rect_stroke(
             response.rect.expand(2.0),
             egui::CornerRadius::same(RADIUS_CONTROL),
-            Stroke::new(2.0_f32, ACCENT),
+            Stroke::new(2.0_f32, accent()),
             egui::StrokeKind::Outside,
         );
     }
@@ -322,11 +444,11 @@ pub fn slider(ui: &mut egui::Ui, slider: egui::Slider<'_>) -> egui::Response {
 /// digits in the selection stroke colour, which must stay off that tint.
 fn slider_visuals(visuals: &mut egui::Visuals) {
     visuals.slider_trailing_fill = true;
-    visuals.widgets.inactive.bg_fill = BORDER_STRONG;
-    visuals.widgets.inactive.fg_stroke = Stroke::new(2.0_f32, TEXT);
-    visuals.widgets.hovered.fg_stroke = Stroke::new(2.0_f32, TEXT);
+    visuals.widgets.inactive.bg_fill = border_strong();
+    visuals.widgets.inactive.fg_stroke = Stroke::new(2.0_f32, text_color());
+    visuals.widgets.hovered.fg_stroke = Stroke::new(2.0_f32, text_color());
     // Keyboard focus and dragging share the active visuals.
-    visuals.widgets.active.fg_stroke = Stroke::new(2.0_f32, ACCENT);
+    visuals.widgets.active.fg_stroke = Stroke::new(2.0_f32, accent());
 }
 
 // ---------------------------------------------------------------------------
@@ -363,28 +485,32 @@ mod tests {
     use super::*;
 
     #[test]
-    fn text_roles_meet_wcag_aa_on_every_dark_surface() {
-        for (name, fg, bg, minimum) in [
-            ("body/canvas", TEXT, CANVAS, 4.5),
-            ("body/surface", TEXT, SURFACE, 4.5),
-            ("secondary/canvas", TEXT_SECONDARY, CANVAS, 4.5),
-            ("secondary/surface", TEXT_SECONDARY, SURFACE, 4.5),
-            ("muted/canvas", TEXT_MUTED, CANVAS, 4.5),
-            ("muted/surface", TEXT_MUTED, SURFACE, 4.5),
-            ("accent/canvas", ACCENT, CANVAS, 4.5),
-            ("on-accent/accent", ON_ACCENT, ACCENT, 4.5),
-            ("on-accent/stop button", ON_ACCENT, ERROR, 4.5),
-            ("error/surface", ERROR, SURFACE, 4.5),
-            ("warning/surface", WARNING, SURFACE, 4.5),
-            ("success/surface", SUCCESS, SURFACE, 4.5),
-            ("border/surface", BORDER_STRONG, SURFACE, 3.0),
-            ("focus/canvas", ACCENT, CANVAS, 3.0),
-        ] {
-            let ratio = contrast_ratio(fg, bg);
-            assert!(
-                ratio >= minimum,
-                "{name}: {ratio:.2}:1 is below {minimum}:1"
-            );
+    fn text_roles_meet_wcag_aa_in_both_modes() {
+        for dark in [false, true] {
+            let context = egui::Context::default();
+            let _palette = enter(&context, dark);
+            for (name, fg, bg, minimum) in [
+                ("body/canvas", text_color(), canvas(), 4.5),
+                ("body/surface", text_color(), surface(), 4.5),
+                ("secondary/canvas", text_secondary(), canvas(), 4.5),
+                ("secondary/surface", text_secondary(), surface(), 4.5),
+                ("muted/canvas", text_muted(), canvas(), 4.5),
+                ("muted/surface", text_muted(), surface(), 4.5),
+                ("accent/canvas", accent(), canvas(), 4.5),
+                ("on-accent/accent", on_accent(), accent(), 4.5),
+                ("on-accent/stop button", on_accent(), error_color(), 4.5),
+                ("error/surface", error_color(), surface(), 4.5),
+                ("warning/surface", warning(), surface(), 4.5),
+                ("success/surface", success(), surface(), 4.5),
+                ("border/surface", border_strong(), surface(), 3.0),
+                ("focus/canvas", accent(), canvas(), 3.0),
+            ] {
+                let ratio = contrast_ratio(fg, bg);
+                assert!(
+                    ratio >= minimum,
+                    "{name}: {ratio:.2}:1 is below {minimum}:1"
+                );
+            }
         }
     }
 
@@ -445,7 +571,7 @@ mod tests {
         apply(&context);
         let style = context.style();
         assert!(style.spacing.interact_size.y >= 32.0);
-        assert_eq!(style.visuals.widgets.active.bg_stroke.color, ACCENT);
+        assert_eq!(style.visuals.widgets.active.bg_stroke.color, accent());
         assert_eq!(style.visuals.widgets.active.bg_stroke.width, 2.0);
         assert_eq!(
             style.visuals.widgets.inactive.corner_radius.nw,
@@ -531,7 +657,8 @@ mod tests {
         apply(&context);
         let mut visuals = context.style().visuals.clone();
         assert_eq!(
-            visuals.widgets.inactive.bg_fill, SURFACE,
+            visuals.widgets.inactive.bg_fill,
+            surface(),
             "without the slider scope the rail is the card colour"
         );
         let selection = visuals.selection;
@@ -545,7 +672,7 @@ mod tests {
                 visuals.widgets.active.fg_stroke.color,
             ),
         ] {
-            let ratio = contrast_ratio(color, SURFACE);
+            let ratio = contrast_ratio(color, surface());
             assert!(ratio >= 3.0, "slider {part}: {ratio:.2}:1 on a card");
         }
         // Selected digits in the value box are drawn in the stroke colour on the fill.

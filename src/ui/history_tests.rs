@@ -195,7 +195,7 @@ fn the_history_says_what_it_could_not_read_and_what_it_left_out() {
     );
     assert_eq!(
         failure.2,
-        theme::ERROR,
+        theme::error_color(),
         "the failure is not in the error colour"
     );
     assert!(

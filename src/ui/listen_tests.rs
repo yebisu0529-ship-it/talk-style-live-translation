@@ -442,7 +442,7 @@ pub(super) fn marked(window: &Window) -> Vec<&'static str> {
         .chain([SCREEN])
         .filter(|label| {
             window.has(label)
-                && filled(&window.output, theme::ACCENT_SOFT)
+                && filled(&window.output, theme::accent_soft())
                     .iter()
                     .any(|rect| rect.contains_rect(window.at(label)))
         })
@@ -672,7 +672,7 @@ const STATE_WORDS: [&str; 9] = [
 fn the_line_beside_the_button_says_what_is_going_on() {
     type Change = fn(&mut App);
     let states: [(&str, Change, &str, Color32); 7] = [
-        ("止まっています", |_| {}, "● 聞く", theme::TEXT_SECONDARY),
+        ("止まっています", |_| {}, "● 聞く", theme::text_secondary()),
         (
             "YouTube字幕を受け取っています",
             |app| {
@@ -681,7 +681,7 @@ fn the_line_beside_the_button_says_what_is_going_on() {
                 app.last_caption = Some(Instant::now());
             },
             "■ 止める",
-            theme::ACCENT,
+            theme::accent(),
         ),
         (
             "PC音声を聞いています",
@@ -690,7 +690,7 @@ fn the_line_beside_the_button_says_what_is_going_on() {
                 app.asr_ready = true;
             },
             "■ 止める",
-            theme::ACCENT,
+            theme::accent(),
         ),
         (
             "YouTube字幕を受け取っています",
@@ -702,25 +702,25 @@ fn the_line_beside_the_button_says_what_is_going_on() {
                 app.asr_ready = true;
             },
             "■ 止める",
-            theme::ACCENT,
+            theme::accent(),
         ),
         (
             "YouTube字幕を待っています",
             |app| app.caption_enabled = true,
             "■ 止める",
-            theme::TEXT_SECONDARY,
+            theme::text_secondary(),
         ),
         (
             "音声認識を準備しています",
             |app| app.audio_start_requested = true,
             "■ 止める",
-            theme::TEXT_SECONDARY,
+            theme::text_secondary(),
         ),
         (
             "画面の文字を読み取っています",
             |app| app.start_screen_feed(1, (0, 0, 120, 40)),
             "■ 止める",
-            theme::ACCENT,
+            theme::accent(),
         ),
     ];
     for (words, change, button, color) in states {
@@ -814,7 +814,7 @@ fn an_error_is_the_line_beside_the_button_in_red() {
     app.caption_enabled = true;
     let window = drawn(&mut app, (860.0, 620.0));
     let (_, color) = find_text(&window.output, "音声認識を読み込めませんでした。");
-    assert_eq!(color, theme::ERROR);
+    assert_eq!(color, theme::error_color());
     assert!(
         window.has("■ 止める"),
         "listening goes on and can be stopped"
@@ -1093,7 +1093,7 @@ fn nemotron_with_a_language_it_cannot_hear_starts_nothing_and_the_line_says_what
         window.has(ENGLISH_ONLY),
         "the line beside 聞く does not say it"
     );
-    assert_eq!(find_text(&window.output, ENGLISH_ONLY).1, theme::WARNING);
+    assert_eq!(find_text(&window.output, ENGLISH_ONLY).1, theme::warning());
 
     window.click(&mut app, "● 聞く");
     assert_eq!(armed(&app), (false, false), "nothing pretends to listen");

@@ -6,8 +6,8 @@ use plamo_translate::model_catalog::{
 };
 use std::collections::HashSet;
 use theme::{
-    ACCENT, ACCENT_SOFT, BORDER, BORDER_STRONG, INPUT, SURFACE, SURFACE_RAISED, TEXT, TEXT_MUTED,
-    TEXT_SECONDARY, WARNING,
+    accent, accent_soft, border, border_strong, input, surface, surface_raised, text_color,
+    text_muted, text_secondary, warning,
 };
 
 const METER_WIDTH: f32 = 320.0;
@@ -47,10 +47,10 @@ impl RowStatus {
 
     fn color(&self) -> Color32 {
         match self {
-            Self::Blocked(_) => WARNING,
-            Self::InUse(_) => TEXT,
-            Self::Recommended => ACCENT,
-            Self::Saved | Self::Plain => TEXT_SECONDARY,
+            Self::Blocked(_) => warning(),
+            Self::InUse(_) => text_color(),
+            Self::Recommended => accent(),
+            Self::Saved | Self::Plain => text_secondary(),
         }
     }
 }
@@ -229,20 +229,20 @@ impl MeterView {
 
     /// The lines under the bar. A colour key only where the bar draws that colour.
     fn items(&self) -> Vec<MeterItem> {
-        let estimate = if self.exceeds() { WARNING } else { ACCENT };
+        let estimate = if self.exceeds() { warning() } else { accent() };
         let mut items = vec![
             MeterItem {
-                key: Some(TEXT_MUTED),
+                key: Some(text_muted()),
                 text: self.used_line(),
-                color: TEXT_SECONDARY,
+                color: text_secondary(),
             },
             MeterItem {
                 key: self.draws_estimate().then_some(estimate),
                 text: self.model_line(),
                 color: if self.exceeds() {
-                    WARNING
+                    warning()
                 } else {
-                    TEXT_SECONDARY
+                    text_secondary()
                 },
             },
         ];
@@ -250,7 +250,7 @@ impl MeterView {
             items.push(MeterItem {
                 key: None,
                 text,
-                color: WARNING,
+                color: warning(),
             });
         }
         items
@@ -357,7 +357,7 @@ fn rows_ui(
         .filter_map(|r| r.status.text())
         .map(|text| {
             ui.painter()
-                .layout_job(one_line(&text, TEXT, f32::INFINITY))
+                .layout_job(one_line(&text, text_color(), f32::INFINITY))
                 .size()
                 .x
         })
@@ -390,11 +390,14 @@ fn paint_row(
         },
     );
     let (fill, stroke) = if selected {
-        (ACCENT_SOFT, egui::Stroke::new(1.5_f32, ACCENT))
+        (accent_soft(), egui::Stroke::new(1.5_f32, accent()))
     } else if selectable && response.hovered() {
-        (SURFACE_RAISED, egui::Stroke::new(1.0_f32, BORDER_STRONG))
+        (
+            surface_raised(),
+            egui::Stroke::new(1.0_f32, border_strong()),
+        )
     } else {
-        (SURFACE, theme::hairline())
+        (surface(), theme::hairline())
     };
     let painter = ui.painter();
     painter.rect(
@@ -412,22 +415,22 @@ fn paint_row(
         egui::Stroke::new(
             if selected { 2.0_f32 } else { 1.5_f32 },
             if selected {
-                ACCENT
+                accent()
             } else if selectable {
-                BORDER_STRONG
+                border_strong()
             } else {
-                BORDER
+                border()
             },
         ),
     );
     if selected {
-        painter.circle_filled(radio, RADIO_RADIUS / 2.0, ACCENT);
+        painter.circle_filled(radio, RADIO_RADIUS / 2.0, accent());
     }
     // A row that cannot be chosen is muted, but its reason stays at full strength.
     let (primary, secondary) = if selectable {
-        (TEXT, TEXT_SECONDARY)
+        (text_color(), text_secondary())
     } else {
-        (TEXT_MUTED, TEXT_MUTED)
+        (text_muted(), text_muted())
     };
     let name_x = radio.x + RADIO_RADIUS + theme::SPACE_3;
     painter.text(
@@ -523,7 +526,7 @@ fn meter_ui(ui: &mut egui::Ui, view: &MeterView, stacked: bool) {
             ui.label(
                 RichText::new("GPUメモリ")
                     .size(theme::SIZE_LABEL)
-                    .color(TEXT)
+                    .color(text_color())
                     .strong(),
             );
             ui.label(theme::caption(&view.name));
@@ -569,8 +572,8 @@ fn meter_bar(ui: &mut egui::Ui, view: &MeterView) {
     painter.rect(
         rect,
         egui::CornerRadius::same((BAR_HEIGHT / 2.0) as u8),
-        INPUT,
-        egui::Stroke::new(1.0_f32, BORDER_STRONG),
+        input(),
+        egui::Stroke::new(1.0_f32, border_strong()),
         egui::StrokeKind::Inside,
     );
     let inner = rect.shrink(2.0);
@@ -588,7 +591,7 @@ fn meter_bar(ui: &mut egui::Ui, view: &MeterView) {
         inner,
         inner.left(),
         used_end,
-        TEXT_MUTED,
+        text_muted(),
         true,
         extra == 0,
     );
@@ -603,7 +606,7 @@ fn meter_bar(ui: &mut egui::Ui, view: &MeterView) {
             inner,
             start,
             estimate_end,
-            if view.exceeds() { WARNING } else { ACCENT },
+            if view.exceeds() { warning() } else { accent() },
             used_end <= inner.left(),
             true,
         );
@@ -615,7 +618,7 @@ fn meter_bar(ui: &mut egui::Ui, view: &MeterView) {
                 egui::pos2(limit, rect.top() - 2.0),
                 egui::pos2(limit, rect.bottom() + 2.0),
             ],
-            egui::Stroke::new(1.0_f32, TEXT_SECONDARY),
+            egui::Stroke::new(1.0_f32, text_secondary()),
         );
     }
     response.on_hover_text(format!(

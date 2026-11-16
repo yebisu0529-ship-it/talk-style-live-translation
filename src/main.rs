@@ -45,7 +45,7 @@ mod theme;
 mod ui;
 mod window_mode;
 
-use theme::ACCENT;
+use theme::accent;
 
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(default)]
@@ -1705,7 +1705,7 @@ impl App {
                             ui.painter().rect_stroke(
                                 chosen,
                                 0.0,
-                                egui::Stroke::new(2.5_f32, ACCENT),
+                                egui::Stroke::new(2.5_f32, accent()),
                                 egui::StrokeKind::Inside,
                             );
                             if interaction.drag_stopped() {
@@ -1728,7 +1728,7 @@ impl App {
                             egui::Align2::LEFT_TOP,
                             "翻訳したい範囲をドラッグ · Escでキャンセル",
                             egui::FontId::proportional(theme::SIZE_TITLE),
-                            ACCENT,
+                            accent(),
                         );
                         if ctx.input(|i| {
                             i.key_pressed(egui::Key::Escape) || i.viewport().close_requested()
@@ -1786,6 +1786,7 @@ impl eframe::App for App {
     }
 
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+        let _palette = theme::enter(ctx, self.settings.dark_chat);
         if self.native_window.is_none()
             && let Ok(handle) = frame.window_handle()
             && let RawWindowHandle::Win32(handle) = handle.as_raw()
@@ -3313,6 +3314,34 @@ fn render_long_paragraph_views(folder: &Path) -> Result<()> {
     Ok(())
 }
 
+fn render_theme_views(folder: &Path) -> Result<()> {
+    fs::create_dir_all(folder)?;
+    for dark in [false, true] {
+        let mode = if dark { "dark" } else { "light" };
+        for (name, tab) in [
+            ("chat", Tab::Live),
+            ("translation", Tab::Text),
+            ("settings", Tab::Settings),
+        ] {
+            let ctx = egui::Context::default();
+            ui::configure_theme(&ctx);
+            let mut app = App::inert();
+            app.settings.dark_chat = dark;
+            app.tab = tab;
+            app.startup_decided = true;
+            app.status = "プレビュー".into();
+            preview::render(
+                &ctx,
+                &folder.join(format!("{name}-{mode}.png")),
+                860,
+                620,
+                |ctx| app.render_ui(ctx),
+            )?;
+        }
+    }
+    Ok(())
+}
+
 fn main() -> eframe::Result {
     let args: Vec<String> = std::env::args().skip(1).collect();
     if let Some(index) = args.iter().position(|arg| arg == "--render-preview") {
@@ -3320,7 +3349,11 @@ fn main() -> eframe::Result {
             .get(index + 1)
             .map(PathBuf::from)
             .unwrap_or_else(|| app_root().join("verification/ui-before"));
-        if let Err(error) = render_demo_views(&folder) {
+        if let Err(error) = if args.iter().any(|arg| arg == "--theme-only") {
+            render_theme_views(&folder)
+        } else {
+            render_demo_views(&folder)
+        } {
             eprintln!("Preview failed: {error:#}");
             std::process::exit(1);
         }

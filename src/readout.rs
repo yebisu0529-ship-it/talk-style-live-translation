@@ -519,7 +519,7 @@ impl App {
             ui.label(&self.readout.status);
         }
         if !self.readout.error.is_empty() {
-            ui.colored_label(theme::ERROR, &self.readout.error);
+            ui.colored_label(theme::error_color(), &self.readout.error);
         }
     }
     pub(super) fn readout_setup_ui(&mut self, ctx: &egui::Context) {
@@ -571,7 +571,7 @@ impl App {
                     });
                 }
                 if !self.readout.error.is_empty() {
-                    ui.colored_label(theme::ERROR, &self.readout.error);
+                    ui.colored_label(theme::error_color(), &self.readout.error);
                 }
             });
     }

@@ -578,3 +578,17 @@ FRB公式会見の同じ10秒音声を使った常駐REST認識と、160ms単位
 - 別のクリーンなWindows OS、AMD/Intel GPUでの推論、全14翻訳モデルの性能比較、長時間の音声処理、正解全文による認識精度の比較。
 
 本書の時間はいずれも、このPCと選んだ入力での観測値です。推奨モデルがすべてのPCで最速・最高品質になることや、音声翻訳と読み上げが常にリアルタイムに追いつくことを示すものではありません。
+
+
+## 1.0.1 application theme (2026-11-17)
+
+The saved `dark_chat` preference now selects the palette for the entire app. Its key stays unchanged so existing settings remain readable. Light mode uses pale surfaces, dark text and a dark green accent; dark mode retains its existing colors. The synchronous paint scope restores its previous palette on drop, including nested viewport calls.
+
+Validation on Windows:
+
+- `cargo test --locked`: 688 passed, 7 existing ignored tests. Windows PowerShell's module path must include its standard Modules directory for the packaging test.
+- Rendered chat, simple translation and settings in both modes with `--render-preview <folder> --theme-only`; inspected the settings pair and light translation view.
+- Regression coverage switches light → dark → light across chat, translation, history, settings and setup; verifies rendered canvas colors, text contrast and light scrollbar visibility. Existing mode persistence and mini/chat tests pass.
+- Both palettes meet the existing text, status, action and focus contrast thresholds.
+
+No model download, translation inference, installer deployment or release upload was performed for this UI change.

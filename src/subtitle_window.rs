@@ -7,10 +7,10 @@ use plamo_translate::live_text::{SourceKind, SourceStamp};
 
 use super::{chat, theme};
 
-const BACKGROUND: Color32 = theme::CANVAS;
-const MUTED: Color32 = theme::TEXT_SECONDARY;
-const ACCENT: Color32 = theme::ACCENT;
-const WARNING: Color32 = theme::WARNING;
+use super::theme::accent;
+use super::theme::canvas as background;
+use super::theme::text_secondary as muted;
+use super::theme::warning;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Phase {
@@ -282,7 +282,7 @@ impl State {
 
     /// The native window's panel. Previews and tests draw through it too.
     pub fn panel() -> egui::CentralPanel {
-        egui::CentralPanel::default().frame(egui::Frame::new().fill(BACKGROUND).inner_margin(12))
+        egui::CentralPanel::default().frame(egui::Frame::new().fill(background()).inner_margin(12))
     }
 
     /// Headless-previewable content; emits no native close/focus commands.
@@ -300,7 +300,7 @@ impl State {
                 ui.label(
                     RichText::new("文字サイズ")
                         .size(theme::SIZE_LABEL)
-                        .color(MUTED),
+                        .color(muted()),
                 );
                 theme::slider(
                     ui,
@@ -335,7 +335,7 @@ impl State {
                             chat::Source::YouTube => "YouTube字幕",
                         })
                         .size(theme::SIZE_CAPTION)
-                        .color(MUTED),
+                        .color(muted()),
                     );
                 }
             });
@@ -366,11 +366,11 @@ impl State {
 
     fn status(&self) -> (String, Color32) {
         let (phase, color) = match self.view.as_ref().map(|view| view.phase) {
-            Some(Phase::Updating) => ("訳文を更新中 · 未確定", WARNING),
-            Some(Phase::Final) => ("確定した文章", ACCENT),
-            Some(Phase::Interrupted) => ("中断した文章 · 未確定", WARNING),
-            Some(Phase::Failed) => ("更新に失敗 · 最後の訳文を表示", WARNING),
-            None => ("入力待ち", MUTED),
+            Some(Phase::Updating) => ("訳文を更新中 · 未確定", warning()),
+            Some(Phase::Final) => ("確定した文章", accent()),
+            Some(Phase::Interrupted) => ("中断した文章 · 未確定", warning()),
+            Some(Phase::Failed) => ("更新に失敗 · 最後の訳文を表示", warning()),
+            None => ("入力待ち", muted()),
         };
         let mut label = phase.to_owned();
         match self.playback {
