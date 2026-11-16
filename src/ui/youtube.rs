@@ -40,10 +40,10 @@ impl Link {
     /// state that works gets the accent fill.
     fn badge(self) -> (&'static str, Color32, Color32) {
         match self {
-            Self::NotYet => ("未接続", TEXT_MUTED, SURFACE_RAISED),
-            Self::WrongKey => ("接続キーが違います", ERROR, SURFACE_RAISED),
-            Self::Connected { .. } => ("接続済み", theme::SUCCESS, ACCENT_SOFT),
-            Self::Captions => ("字幕を受信中", theme::SUCCESS, ACCENT_SOFT),
+            Self::NotYet => ("未接続", text_muted(), surface_raised()),
+            Self::WrongKey => ("接続キーが違います", error_color(), surface_raised()),
+            Self::Connected { .. } => ("接続済み", theme::success(), accent_soft()),
+            Self::Captions => ("字幕を受信中", theme::success(), accent_soft()),
         }
     }
 
@@ -80,9 +80,9 @@ fn step(
 ) {
     ui.horizontal_top(|ui| {
         let (mark, color) = if number <= done {
-            ("✓".to_owned(), theme::SUCCESS)
+            ("✓".to_owned(), theme::success())
         } else {
-            (number.to_string(), ACCENT)
+            (number.to_string(), accent())
         };
         // As tall as the title's row, so the marker sits on its line.
         let row = ui.text_style_height(&egui::TextStyle::Body);
@@ -332,26 +332,26 @@ mod tests {
     #[test]
     fn each_state_has_its_badge_and_checks_off_the_steps_behind_it() {
         for (heard, word, color, fill, checked) in [
-            (vec![], "未接続", TEXT_MUTED, SURFACE_RAISED, 0),
+            (vec![], "未接続", text_muted(), surface_raised(), 0),
             (
                 vec![Contact::WrongKey],
                 "接続キーが違います",
-                ERROR,
-                SURFACE_RAISED,
+                error_color(),
+                surface_raised(),
                 1,
             ),
             (
                 vec![Contact::Checked],
                 "接続済み",
-                theme::SUCCESS,
-                ACCENT_SOFT,
+                theme::success(),
+                accent_soft(),
                 2,
             ),
             (
                 vec![Contact::Caption],
                 "字幕を受信中",
-                theme::SUCCESS,
-                ACCENT_SOFT,
+                theme::success(),
+                accent_soft(),
                 3,
             ),
         ] {
@@ -377,12 +377,12 @@ mod tests {
                 .filter(|(text, _, _)| text == "✓")
                 .collect();
             assert_eq!(checks.len(), checked, "{word}");
-            assert!(checks.iter().all(|(_, _, ink)| *ink == theme::SUCCESS));
+            assert!(checks.iter().all(|(_, _, ink)| *ink == theme::success()));
             for number in 1..=3 {
                 let mark = number.to_string();
                 assert_eq!(window.has(&mark), number > checked, "{word}: step {number}");
                 if number > checked {
-                    assert_eq!(find_text(&window.output, &mark).1, ACCENT);
+                    assert_eq!(find_text(&window.output, &mark).1, accent());
                 }
             }
         }

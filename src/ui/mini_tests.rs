@@ -219,7 +219,17 @@ fn copied(window: &Window) -> Vec<&str> {
 
 /// The words in each bubble and their colour, from the top of the chat down.
 fn bubbles(window: &Window) -> Vec<(String, Color32)> {
-    let mut rects = filled(&window.output, theme::CHAT_BUBBLE);
+    let mut rects: Vec<_> = shapes(&window.output)
+        .into_iter()
+        .filter_map(|(_, shape)| match shape {
+            egui::Shape::Rect(rect)
+                if rect.fill == theme::CHAT_BUBBLE && rect.corner_radius.ne == 16 =>
+            {
+                Some(rect.rect)
+            }
+            _ => None,
+        })
+        .collect();
     rects.sort_by(|a, b| a.top().total_cmp(&b.top()));
     rects
         .iter()
@@ -477,7 +487,7 @@ fn the_hover_text_of_the_button_is_the_main_window_s_with_its_shortcut() {
 fn the_status_line_says_what_the_line_beside_the_main_button_says_in_its_colour() {
     type Change = fn(&mut App);
     let states: [(&str, Change, Color32); 9] = [
-        ("止まっています", |_| {}, theme::TEXT_SECONDARY),
+        ("止まっています", |_| {}, theme::text_secondary()),
         (
             "YouTube字幕を受け取っています",
             |app| {
@@ -485,7 +495,7 @@ fn the_status_line_says_what_the_line_beside_the_main_button_says_in_its_colour(
                 app.caption_paused = false;
                 app.last_caption = Some(Instant::now());
             },
-            theme::ACCENT,
+            theme::accent(),
         ),
         (
             "PC音声を聞いています",
@@ -493,27 +503,27 @@ fn the_status_line_says_what_the_line_beside_the_main_button_says_in_its_colour(
                 app.audio_enabled = true;
                 app.asr_ready = true;
             },
-            theme::ACCENT,
+            theme::accent(),
         ),
         (
             "YouTube字幕を待っています",
             |app| app.caption_enabled = true,
-            theme::TEXT_SECONDARY,
+            theme::text_secondary(),
         ),
         (
             "音声認識を準備しています",
             |app| app.audio_start_requested = true,
-            theme::TEXT_SECONDARY,
+            theme::text_secondary(),
         ),
         (
             "画面の文字を読み取っています",
             |app| app.start_screen_feed(1, (0, 0, 120, 40)),
-            theme::ACCENT,
+            theme::accent(),
         ),
         (
             "入力を待っています",
             |app| app.audio_enabled = true,
-            theme::TEXT_SECONDARY,
+            theme::text_secondary(),
         ),
         (
             "翻訳モデルを準備しています",
@@ -521,12 +531,12 @@ fn the_status_line_says_what_the_line_beside_the_main_button_says_in_its_colour(
                 app.backend_ready = false;
                 app.backend_loading = true;
             },
-            theme::WARNING,
+            theme::warning(),
         ),
         (
             "翻訳モデルの準備が必要です",
             |app| app.backend_ready = false,
-            theme::TEXT,
+            theme::text_color(),
         ),
     ];
     for (words, change, color) in states {
@@ -552,7 +562,7 @@ fn the_status_line_says_what_the_line_beside_the_main_button_says_in_its_colour(
 #[test]
 fn captions_that_arrive_while_they_are_not_translated_are_told_on_the_status_line_too() {
     for size in SIZES {
-        let stopped = ("止まっています".to_owned(), theme::TEXT_SECONDARY);
+        let stopped = ("止まっています".to_owned(), theme::text_secondary());
         let mut app = mini();
         let extension = extension(&mut app);
         extension
@@ -564,7 +574,7 @@ fn captions_that_arrive_while_they_are_not_translated_are_told_on_the_status_lin
             status_line(&window).0,
             [
                 stopped.clone(),
-                (CAPTIONS_ARRIVING.to_owned(), theme::TEXT_SECONDARY)
+                (CAPTIONS_ARRIVING.to_owned(), theme::text_secondary())
             ],
             "at {size:?}"
         );
@@ -581,14 +591,14 @@ fn a_failure_to_save_a_service_error_and_a_failed_readout_are_on_the_status_line
     const UNSAVED: &str = "保存できていません（Could not append translation history）";
     const SERVICE: &str = "音声認識を読み込めませんでした。";
     const READOUT: &str = "読み上げは日本語の訳文に対応しています。";
-    let stopped = ("止まっています".to_owned(), theme::TEXT_SECONDARY);
+    let stopped = ("止まっています".to_owned(), theme::text_secondary());
 
     let mut app = mini();
     app.journal_error = "Could not append translation history".into();
     let window = drawn(&mut app, USUAL);
     assert_eq!(
         status_line(&window).0,
-        [(UNSAVED.to_owned(), theme::ERROR), stopped.clone()],
+        [(UNSAVED.to_owned(), theme::error_color()), stopped.clone()],
         "a failure to save comes first"
     );
     // The live page of the main window says it in the same words.
@@ -596,7 +606,7 @@ fn a_failure_to_save_a_service_error_and_a_failed_readout_are_on_the_status_line
     main.journal_error = "Could not append translation history".into();
     assert_eq!(
         find_text(&drawn(&mut main, MAIN).output, UNSAVED).1,
-        theme::ERROR
+        theme::error_color()
     );
 
     let mut app = mini();
@@ -605,7 +615,7 @@ fn a_failure_to_save_a_service_error_and_a_failed_readout_are_on_the_status_line
     let window = drawn(&mut app, USUAL);
     assert_eq!(
         status_line(&window).0,
-        [(SERVICE.to_owned(), theme::ERROR)],
+        [(SERVICE.to_owned(), theme::error_color())],
         "the error takes the place of what the inputs are doing"
     );
 
@@ -615,7 +625,7 @@ fn a_failure_to_save_a_service_error_and_a_failed_readout_are_on_the_status_line
     let window = drawn(&mut app, USUAL);
     assert_eq!(
         status_line(&window).0,
-        [stopped.clone(), (READOUT.to_owned(), theme::ERROR)],
+        [stopped.clone(), (READOUT.to_owned(), theme::error_color())],
         "a failure to read aloud comes last"
     );
     app.settings.readout_enabled = false;
@@ -636,9 +646,9 @@ fn a_failure_to_save_a_service_error_and_a_failed_readout_are_on_the_status_line
     assert_eq!(
         parts,
         [
-            (UNSAVED.to_owned(), theme::ERROR),
-            (SERVICE.to_owned(), theme::ERROR),
-            (READOUT.to_owned(), theme::ERROR),
+            (UNSAVED.to_owned(), theme::error_color()),
+            (SERVICE.to_owned(), theme::error_color()),
+            (READOUT.to_owned(), theme::error_color()),
         ]
     );
     assert!(cut_short, "three errors do not fit the smallest window");
@@ -671,7 +681,7 @@ fn nothing_else_is_said_on_the_status_line() {
         status_line(&window).0,
         [(
             "YouTube字幕を待っています".to_owned(),
-            theme::TEXT_SECONDARY
+            theme::text_secondary()
         )]
     );
     for gone in [
@@ -2325,7 +2335,7 @@ fn open_card(app: &mut App) {
 }
 
 fn menu(window: &Window, first: &str) -> (egui::Rect, Vec<(String, egui::Rect)>) {
-    let frame = box_of(&window.output, first, theme::SURFACE);
+    let frame = box_of(&window.output, first, theme::surface());
     let mut rows: Vec<_> = texts(&window.output)
         .into_iter()
         .filter(|(text, rect, _)| {
@@ -2483,7 +2493,7 @@ fn the_display_and_input_submenus_open_left_of_the_menu_inside_the_window_at_eve
                         assert!(window.has(option), "{option} is not behind {at}");
                     }
                     let first = window.at(options[0]);
-                    let submenu = filled(&window.output, theme::SURFACE)
+                    let submenu = filled(&window.output, theme::surface())
                         .into_iter()
                         .filter(|rect| *rect != frame && rect.contains_rect(first))
                         .min_by(|a, b| a.area().total_cmp(&b.area()))
@@ -2820,7 +2830,7 @@ fn window_level(window: &Window) -> Vec<egui::WindowLevel> {
 /// The control is drawn as on: filled in the colour of what is chosen.
 fn drawn_on(window: &Window, label: &str) -> bool {
     let words = window.at(label);
-    filled(&window.output, theme::ACCENT_SOFT)
+    filled(&window.output, theme::accent_soft())
         .iter()
         .any(|face| face.contains_rect(words))
 }

@@ -390,7 +390,7 @@ impl App {
             self.reset_screen_ocr();
         }
         if !self.ocr.error.is_empty() {
-            ui.colored_label(theme::ERROR, &self.ocr.error);
+            ui.colored_label(theme::error_color(), &self.ocr.error);
         }
     }
     pub(super) fn screen_ocr_setup_ui(&mut self, ctx: &egui::Context) {
@@ -419,7 +419,7 @@ impl App {
                     if ui.button("今はしない").clicked(){self.ocr.confirm=false;self.ocr.pending=None;}
                 });
             }
-            if !self.ocr.error.is_empty(){ui.colored_label(theme::ERROR,&self.ocr.error);}
+            if !self.ocr.error.is_empty(){ui.colored_label(theme::error_color(),&self.ocr.error);}
         });
     }
 }

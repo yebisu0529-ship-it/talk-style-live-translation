@@ -283,7 +283,7 @@ impl App {
                 self.paragraph_tools.cancel.store(true, Ordering::Release);
             }
         } else if self.paragraph_tools.engine.is_some() {
-            ui.colored_label(ACCENT, "英語の文章区切り補助 · 準備完了");
+            ui.colored_label(accent(), "英語の文章区切り補助 · 準備完了");
         } else {
             ui.label(theme::label(
                 "初回は約86MBを取得します。未準備でも、文章をつなぐ翻訳は利用できます。",
@@ -301,7 +301,7 @@ impl App {
         }
         if !self.paragraph_tools.error.is_empty() {
             ui.colored_label(
-                theme::ERROR,
+                theme::error_color(),
                 "区切り補助を準備できませんでした。文章の翻訳は続けられます。",
             );
             egui::CollapsingHeader::new("区切り補助のエラー詳細").show(ui, |ui| {

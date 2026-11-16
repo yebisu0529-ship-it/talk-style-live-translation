@@ -2,7 +2,7 @@
 //! and its one listen button. A reading or a text translation asked for here
 //! puts its result on a card in the chat's place, because the シンプル翻訳
 //! screen is out of sight.
-use super::theme::{self, ACCENT, ERROR, SURFACE, TEXT, TEXT_MUTED};
+use super::theme::{self, accent, error_color, surface, text_color, text_muted};
 use super::*;
 use plamo_translate::credit;
 
@@ -191,7 +191,11 @@ impl App {
 
     pub(super) fn mini_ui(&mut self, ctx: &egui::Context) {
         egui::CentralPanel::default()
-            .frame(egui::Frame::new().inner_margin(MARGIN).fill(theme::CANVAS))
+            .frame(
+                egui::Frame::new()
+                    .inner_margin(MARGIN)
+                    .fill(theme::canvas()),
+            )
             .show(ctx, |ui| {
                 ui.spacing_mut().item_spacing = egui::vec2(MARGIN, theme::SPACE_1);
                 self.toolbar(ui);
@@ -354,18 +358,18 @@ impl App {
     fn card_ui(&mut self, ui: &mut egui::Ui) {
         let from_top = std::mem::take(&mut self.mini.card_from_top);
         let (text, color, done) = match self.card() {
-            Card::Failed(why) => (why, ERROR, false),
-            Card::Reading => (screen_ocr::READING, TEXT_MUTED, false),
-            Card::Translating("") => ("翻訳中", TEXT_MUTED, false),
-            Card::Translating(so_far) => (so_far, TEXT, false),
-            Card::Translated(text) => (text, TEXT, true),
-            Card::Empty => (ui::TRANSLATION_HINT, TEXT_MUTED, false),
+            Card::Failed(why) => (why, error_color(), false),
+            Card::Reading => (screen_ocr::READING, text_muted(), false),
+            Card::Translating("") => ("翻訳中", text_muted(), false),
+            Card::Translating(so_far) => (so_far, text_color(), false),
+            Card::Translated(text) => (text, text_color(), true),
+            Card::Empty => (ui::TRANSLATION_HINT, text_muted(), false),
         };
         let (rect, _) = ui.allocate_exact_size(ui.available_size(), egui::Sense::hover());
         ui.painter().rect(
             rect,
             theme::RADIUS_CARD,
-            SURFACE,
+            surface(),
             theme::hairline(),
             egui::StrokeKind::Inside,
         );
@@ -386,7 +390,7 @@ impl App {
                     RichText::new(ui::TRANSLATION)
                         .size(theme::SIZE_LABEL)
                         .strong()
-                        .color(ACCENT),
+                        .color(accent()),
                 );
             });
         });
@@ -435,7 +439,7 @@ impl App {
     fn status_row(&self, ui: &mut egui::Ui) {
         ui::live_region(ui, "mini-status", STATUS_ROW, |ui| {
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                ui.label(RichText::new(credit::LABEL).size(9.0).color(TEXT_MUTED));
+                ui.label(RichText::new(credit::LABEL).size(9.0).color(text_muted()));
                 ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
                     let unsaved = self.unsaved();
                     // Most of what the main window's bottom row tells is about
@@ -454,10 +458,10 @@ impl App {
                     ui::status_message(
                         ui,
                         &[
-                            (unsaved.as_str(), ERROR),
+                            (unsaved.as_str(), error_color()),
                             self.listen_state(),
-                            (captions, theme::TEXT_SECONDARY),
-                            (readout, ERROR),
+                            (captions, theme::text_secondary()),
+                            (readout, error_color()),
                         ],
                     );
                 });

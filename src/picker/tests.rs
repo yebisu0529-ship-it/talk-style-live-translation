@@ -280,8 +280,8 @@ fn the_meter_turns_to_the_warning_and_says_how_much_is_missing() {
     assert_eq!(view.model_line(), "このモデルで +7.4 GB");
     assert!(view.exceeds());
     assert_eq!(view.shortfall_line().unwrap(), "あと3.4 GB足りません");
-    assert_eq!(view.items().last().unwrap().color, WARNING);
-    assert_eq!(view.items()[1].key, Some(WARNING));
+    assert_eq!(view.items().last().unwrap().color, warning());
+    assert_eq!(view.items()[1].key, Some(warning()));
 }
 
 #[test]
@@ -298,7 +298,7 @@ fn a_full_gpu_says_the_model_runs_on_the_cpu() {
     assert_eq!(view.used_line(), "使用中 6.5 GB / 8.0 GB");
     assert_eq!(view.model_line(), "GPUの空きが足りず、CPUで実行します");
     assert!(!view.exceeds() && !view.draws_estimate());
-    assert!(view.items().iter().all(|item| item.key != Some(ACCENT)));
+    assert!(view.items().iter().all(|item| item.key != Some(accent())));
 }
 
 #[test]

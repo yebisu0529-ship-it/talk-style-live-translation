@@ -1,6 +1,6 @@
 use super::theme::{
-    self, ACCENT, ACCENT_SOFT, BORDER_STRONG, CANVAS, ERROR, INPUT, ON_ACCENT, SURFACE,
-    SURFACE_RAISED, TEXT, TEXT_MUTED, TEXT_SECONDARY, WARNING,
+    self, accent, accent_soft, border_strong, canvas, error_color, input, on_accent, surface,
+    surface_raised, text_color, text_muted, text_secondary, warning,
 };
 use super::*;
 use plamo_translate::credit;
@@ -77,9 +77,9 @@ impl Readiness {
 
     fn color(self) -> Color32 {
         match self {
-            Self::Ready => ACCENT,
-            Self::Preparing => WARNING,
-            Self::Missing => TEXT_MUTED,
+            Self::Ready => accent(),
+            Self::Preparing => warning(),
+            Self::Missing => text_muted(),
         }
     }
 
@@ -99,9 +99,9 @@ impl Readiness {
 
     fn headline_color(self) -> Color32 {
         match self {
-            Self::Ready => TEXT_SECONDARY,
-            Self::Preparing => WARNING,
-            Self::Missing => TEXT,
+            Self::Ready => text_secondary(),
+            Self::Preparing => warning(),
+            Self::Missing => text_color(),
         }
     }
 
@@ -195,29 +195,31 @@ fn paint_dot(painter: &egui::Painter, center: egui::Pos2, readiness: Readiness) 
 /// than its hit area, so it keeps clear of the row's edges.
 fn row_button(ui: &mut egui::Ui, label: &str) -> egui::Response {
     let font = egui::FontId::proportional(theme::SIZE_LABEL);
-    let galley = ui.painter().layout_no_wrap(label.to_owned(), font, TEXT);
+    let galley = ui
+        .painter()
+        .layout_no_wrap(label.to_owned(), font, text_color());
     let size = Vec2::new(galley.size().x + 2.0 * theme::SPACE_3, theme::CONTROL_H);
     let (rect, response) = ui.allocate_exact_size(size, egui::Sense::click());
     let face = rect.shrink2(Vec2::new(0.0, theme::SPACE_1));
     let fill = if response.hovered() {
-        SURFACE_RAISED
+        surface_raised()
     } else {
-        INPUT
+        input()
     };
     ui.painter().rect(
         face,
         theme::RADIUS_CONTROL,
         fill,
-        egui::Stroke::new(1.0_f32, BORDER_STRONG),
+        egui::Stroke::new(1.0_f32, border_strong()),
         egui::StrokeKind::Inside,
     );
     ui.painter()
-        .galley(face.center() - galley.size() / 2.0, galley, TEXT);
+        .galley(face.center() - galley.size() / 2.0, galley, text_color());
     if response.has_focus() {
         ui.painter().rect_stroke(
             face,
             theme::RADIUS_CONTROL,
-            egui::Stroke::new(2.0_f32, ACCENT),
+            egui::Stroke::new(2.0_f32, accent()),
             egui::StrokeKind::Inside,
         );
     }
@@ -247,7 +249,7 @@ fn status_chip(ui: &mut egui::Ui, status: &ModelStatus) -> egui::Response {
     job.append(
         status.name,
         0.0,
-        egui::TextFormat::simple(font.clone(), TEXT_SECONDARY),
+        egui::TextFormat::simple(font.clone(), text_secondary()),
     );
     if let Some(word) = readiness.word() {
         job.append(
@@ -267,7 +269,7 @@ fn status_chip(ui: &mut egui::Ui, status: &ModelStatus) -> egui::Response {
     let face = rect.shrink2(Vec2::new(0.0, theme::SPACE_1));
     if readiness.needs_action() && response.hovered() {
         ui.painter()
-            .rect_filled(face, theme::RADIUS_CONTROL, SURFACE_RAISED);
+            .rect_filled(face, theme::RADIUS_CONTROL, surface_raised());
     }
     let center = egui::pos2(rect.left() + theme::SPACE_1 + DOT / 2.0, rect.center().y);
     paint_dot(ui.painter(), center, readiness);
@@ -276,13 +278,13 @@ fn status_chip(ui: &mut egui::Ui, status: &ModelStatus) -> egui::Response {
         rect.center().y - galley.size().y / 2.0,
     );
     let label = galley.text().to_owned();
-    ui.painter().galley(text, galley, TEXT_SECONDARY);
+    ui.painter().galley(text, galley, text_secondary());
     // The row is exactly one control tall, so the ring is drawn inside it.
     if response.has_focus() {
         ui.painter().rect_stroke(
             face,
             theme::RADIUS_CONTROL,
-            egui::Stroke::new(2.0_f32, ACCENT),
+            egui::Stroke::new(2.0_f32, accent()),
             egui::StrokeKind::Inside,
         );
     }
@@ -310,7 +312,7 @@ pub(super) fn status_message(ui: &mut egui::Ui, parts: &[(&str, Color32)]) {
             job.append(
                 "  ·  ",
                 0.0,
-                egui::TextFormat::simple(font.clone(), TEXT_MUTED),
+                egui::TextFormat::simple(font.clone(), text_muted()),
             );
         }
         job.append(text, 0.0, egui::TextFormat::simple(font.clone(), *color));
@@ -364,13 +366,13 @@ fn talk_rows<'a>(
                 source_name(&record.kind)
             ))
             .size(theme::SIZE_CAPTION)
-            .color(TEXT_MUTED),
+            .color(text_muted()),
         );
         ui.add(
             egui::Label::new(
                 RichText::new(&record.translation)
                     .size(text_size)
-                    .color(TEXT),
+                    .color(text_color()),
             )
             .wrap()
             .selectable(true),
@@ -379,7 +381,7 @@ fn talk_rows<'a>(
             egui::Label::new(
                 RichText::new(&record.source)
                     .size(theme::SIZE_LABEL)
-                    .color(TEXT_MUTED),
+                    .color(text_muted()),
             )
             .wrap()
             .selectable(true),
@@ -519,13 +521,15 @@ pub(super) fn primary(label: &str) -> egui::Button<'_> {
         RichText::new(label)
             .size(theme::SIZE_LABEL)
             .strong()
-            .color(ON_ACCENT),
+            .color(on_accent()),
     )
-    .fill(ACCENT)
+    .fill(accent())
     .min_size(Vec2::new(140.0, theme::CONTROL_H_LARGE))
 }
 fn standard_words(label: &str) -> RichText {
-    RichText::new(label).size(theme::SIZE_LABEL).color(TEXT)
+    RichText::new(label)
+        .size(theme::SIZE_LABEL)
+        .color(text_color())
 }
 pub(super) fn standard(label: &str) -> egui::Button<'_> {
     egui::Button::new(standard_words(label)).min_size(Vec2::new(0.0, theme::CONTROL_H))
@@ -553,16 +557,19 @@ pub(super) fn toggle(ui: &mut egui::Ui, value: &mut bool, label: &str) -> egui::
             &mut visuals.widgets.open,
         ] {
             widget.corner_radius = egui::CornerRadius::same(6);
-            widget.bg_fill = if checked { ACCENT_SOFT } else { INPUT };
+            widget.bg_fill = if checked { accent_soft() } else { input() };
             widget.weak_bg_fill = widget.bg_fill;
             widget.bg_stroke =
-                egui::Stroke::new(1.0_f32, if checked { ACCENT } else { BORDER_STRONG });
-            widget.fg_stroke = egui::Stroke::new(2.0_f32, if checked { ACCENT } else { TEXT });
+                egui::Stroke::new(1.0_f32, if checked { accent() } else { border_strong() });
+            widget.fg_stroke =
+                egui::Stroke::new(2.0_f32, if checked { accent() } else { text_color() });
         }
-        visuals.widgets.active.bg_stroke = egui::Stroke::new(2.0_f32, ACCENT);
+        visuals.widgets.active.bg_stroke = egui::Stroke::new(2.0_f32, accent());
         ui.checkbox(
             value,
-            RichText::new(label).size(theme::SIZE_LABEL).color(TEXT),
+            RichText::new(label)
+                .size(theme::SIZE_LABEL)
+                .color(text_color()),
         )
     })
     .inner
@@ -900,7 +907,7 @@ impl App {
                                 egui::Label::new(
                                     RichText::new(subtitle)
                                         .size(theme::SIZE_CAPTION)
-                                        .color(TEXT_MUTED),
+                                        .color(text_muted()),
                                 )
                                 .truncate(),
                             );
@@ -1096,7 +1103,9 @@ impl App {
             toggle(ui, &mut self.settings.auto_scroll, "末尾へ自動スクロール").on_hover_text(
                 "上へスクロールしている間は位置を保ちます。OFFからONに戻すと末尾へ移動します。",
             );
-            toggle(ui, &mut self.settings.dark_chat, "ダークモード");
+            if toggle(ui, &mut self.settings.dark_chat, "ダークモード").changed() {
+                ui.ctx().request_repaint();
+            }
             ui.add_space(theme::SPACE_1);
             ui.label(theme::caption("訳文の文字サイズ"));
             theme::slider(
@@ -1315,7 +1324,7 @@ impl App {
     /// The line beside the 聞く button: what is wrong, or what is going on.
     pub(super) fn listen_state(&self) -> (&str, Color32) {
         if !self.service_error.is_empty() {
-            return (&self.service_error, ERROR);
+            return (&self.service_error, error_color());
         }
         let model = self.translation_readiness();
         if let Some(words) = model.needed() {
@@ -1323,16 +1332,16 @@ impl App {
         }
         let (_, pc_audio) = self.listen_input.flags();
         if pc_audio && self.nemotron_cannot_hear_the_language() {
-            return (streaming::ENGLISH_ONLY, WARNING);
+            return (streaming::ENGLISH_ONLY, warning());
         }
         match self.current_input() {
-            None => ("止まっています", TEXT_SECONDARY),
-            Some(LiveSourceMode::Screen) => ("画面の文字を読み取っています", ACCENT),
-            Some(_) if self.captions_fresh() => ("YouTube字幕を受け取っています", ACCENT),
-            Some(_) if self.audio_enabled && self.asr_ready => ("PC音声を聞いています", ACCENT),
-            Some(_) if self.audio_start_requested => ("音声認識を準備しています", TEXT_SECONDARY),
-            Some(_) if self.caption_enabled => ("YouTube字幕を待っています", TEXT_SECONDARY),
-            Some(_) => ("入力を待っています", TEXT_SECONDARY),
+            None => ("止まっています", text_secondary()),
+            Some(LiveSourceMode::Screen) => ("画面の文字を読み取っています", accent()),
+            Some(_) if self.captions_fresh() => ("YouTube字幕を受け取っています", accent()),
+            Some(_) if self.audio_enabled && self.asr_ready => ("PC音声を聞いています", accent()),
+            Some(_) if self.audio_start_requested => ("音声認識を準備しています", text_secondary()),
+            Some(_) if self.caption_enabled => ("YouTube字幕を待っています", text_secondary()),
+            Some(_) => ("入力を待っています", text_secondary()),
         }
     }
 
@@ -1388,7 +1397,7 @@ impl App {
         let listening = self.current_input().is_some();
         let (face, hover) = if listening {
             (
-                primary("■ 止める").fill(ERROR),
+                primary("■ 止める").fill(error_color()),
                 "入力を止めます。保存済みの訳文はそのまま残ります",
             )
         } else {
@@ -1412,7 +1421,7 @@ impl App {
             ui.painter().rect(
                 bar,
                 theme::RADIUS_CARD,
-                SURFACE,
+                surface(),
                 theme::hairline(),
                 egui::StrokeKind::Inside,
             );
@@ -1482,14 +1491,21 @@ impl App {
                 ""
             };
             let saved = if !self.journal_error.is_empty() {
-                ("", TEXT_MUTED)
+                ("", text_muted())
             } else if self.journal.is_some() {
-                ("履歴に自動保存", theme::SUCCESS)
+                ("履歴に自動保存", theme::success())
             } else {
-                ("プレビュー · 保存されません", TEXT_MUTED)
+                ("プレビュー · 保存されません", text_muted())
             };
             ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
-                status_message(ui, &[(unsaved.as_str(), ERROR), (activity, ACCENT), saved]);
+                status_message(
+                    ui,
+                    &[
+                        (unsaved.as_str(), error_color()),
+                        (activity, accent()),
+                        saved,
+                    ],
+                );
             });
         });
     }
@@ -1709,7 +1725,7 @@ impl App {
                     RichText::new(TRANSLATION)
                         .size(theme::SIZE_LABEL)
                         .strong()
-                        .color(ACCENT),
+                        .color(accent()),
                 );
                 if COPY.button(ui, self.manual_output_ready()).clicked()
                     && let Ok(mut clipboard) = arboard::Clipboard::new()
@@ -1788,7 +1804,7 @@ impl App {
                     ui.label(
                         RichText::new("ファイルを翻訳しています")
                             .size(theme::SIZE_LABEL)
-                            .color(TEXT_SECONDARY),
+                            .color(text_secondary()),
                     );
                     if ui.add(standard("中止")).clicked() {
                         cancel_file = true;
@@ -1997,7 +2013,7 @@ impl App {
                     egui::Label::new(
                         RichText::new(format!("これまでの会話を読めませんでした（{error}）"))
                             .size(theme::SIZE_LABEL)
-                            .color(ERROR),
+                            .color(error_color()),
                     )
                     .wrap(),
                 );
@@ -2062,7 +2078,7 @@ impl App {
             ui.label(
                 RichText::new("一致する履歴がありません。")
                     .size(theme::SIZE_BODY)
-                    .color(TEXT_SECONDARY),
+                    .color(text_secondary()),
             );
         }
         if let Earlier::Read(earlier) = &self.earlier {
@@ -2144,7 +2160,7 @@ impl App {
                 }
             });
         if self.nemotron_cannot_hear_the_language() {
-            ui.label(theme::label(streaming::ENGLISH_ONLY).color(WARNING));
+            ui.label(theme::label(streaming::ENGLISH_ONLY).color(warning()));
         }
         secondary(
             ui,
@@ -2261,7 +2277,7 @@ impl App {
                         .margin(12.0),
                 );
                 if let Err(error) = glossary::parse(&self.glossary_input) {
-                    ui.colored_label(ERROR, error);
+                    ui.colored_label(error_color(), error);
                 }
                 ui.label(RichText::new("文脈（翻訳する文章の背景）").size(theme::SIZE_LABEL));
                 ui.add_sized(
@@ -2319,7 +2335,7 @@ impl App {
                 ui.label(
                     RichText::new(format!("保存先: {}", data_root().display()))
                         .size(theme::SIZE_CAPTION)
-                        .color(TEXT_MUTED),
+                        .color(text_muted()),
                 );
                 if ui.add(standard("翻訳エンジンを起動")).clicked() {
                     self.start_translation_server();
@@ -2468,6 +2484,7 @@ impl App {
         }
     }
     pub(super) fn render_ui(&mut self, ctx: &egui::Context) {
+        let _palette = theme::enter(ctx, self.settings.dark_chat);
         if self.close_after_restore.is_some() {
             egui::CentralPanel::default().show(ctx, |ui| {
                 ui.label("終了しています…");
@@ -2520,7 +2537,7 @@ impl App {
             .exact_height(theme::CONTROL_H)
             .frame(
                 egui::Frame::new()
-                    .fill(SURFACE)
+                    .fill(surface())
                     .inner_margin(egui::Margin::symmetric(theme::GUTTER as i8, 0)),
             )
             .show(ctx, |ui| {
@@ -2534,17 +2551,17 @@ impl App {
                             ui.add_space(theme::SPACE_3);
                         }
                         let readout = if !self.settings.readout_enabled {
-                            ("", TEXT_SECONDARY)
+                            ("", text_secondary())
                         } else if self.readout.error.is_empty() {
-                            (self.readout.status.as_str(), TEXT_SECONDARY)
+                            (self.readout.status.as_str(), text_secondary())
                         } else {
-                            (self.readout.error.as_str(), ERROR)
+                            (self.readout.error.as_str(), error_color())
                         };
                         status_message(
                             ui,
                             &[
-                                (service_error, ERROR),
-                                (self.status.as_str(), TEXT_SECONDARY),
+                                (service_error, error_color()),
+                                (self.status.as_str(), text_secondary()),
                                 readout,
                             ],
                         );
@@ -2557,7 +2574,7 @@ impl App {
         egui::CentralPanel::default()
             .frame(
                 egui::Frame::new()
-                    .fill(CANVAS)
+                    .fill(canvas())
                     .inner_margin(egui::Margin::symmetric(
                         theme::GUTTER as i8,
                         theme::SPACE_4 as i8,
@@ -2607,7 +2624,7 @@ impl App {
                         egui::Label::new(
                             RichText::new(&self.service_error)
                                 .size(theme::SIZE_LABEL)
-                                .color(ERROR),
+                                .color(error_color()),
                         )
                         .wrap(),
                     );
@@ -3274,7 +3291,7 @@ mod live_layout_tests {
                 .unwrap_or(shape.galley.job.sections[0].format.color);
             assert_eq!(
                 color,
-                theme::TEXT_MUTED,
+                theme::text_muted(),
                 "{placeholder} is drawn like entered text"
             );
         }

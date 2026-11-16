@@ -214,3 +214,7 @@ cargo build --release --locked --target x86_64-pc-windows-msvc
   - Indra OCR：[コード（Apache-2.0）](https://github.com/datalab-to/indra/blob/0e96b93c6810f17cf8352acbb4487cc9e45b66d5/LICENSE) / [モデル重み（Modified OpenRAIL-M）](https://huggingface.co/datalab-to/indra-ocr/blob/bd02167fdf2005a19962cc15188f8496a2c87d3b/LICENSE)（※出力のShare-a-Like、競合利用、組織規模に関する制限あり。導入前にリンク先原文をご確認ください）
   - PaddleOCR-VL-1.6：[公式GGUF](https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6-GGUF/tree/511b09642bb324401f15f97cc23bc67e8f0a291d) / [Apache-2.0](https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6/blob/c5630abae1d940eafe0697512a0325494b02ab42/LICENSE)
 - **フォント**：Noto Sans JP（`assets/fonts/OFL.txt` の SIL Open Font License を適用）
+
+### 1.0.1の配色切り替え
+
+「表示」→「ダークモード」をOFFにすると、背景・入力欄・メニュー・設定・履歴を含むアプリ全体が明るい配色になります。ONでは暗い配色になります。ミニ表示と字幕ウィンドウにも同じ設定が適用され、次回起動時も設定を引き継ぎます。
